@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic Dashboard</title>
+    <style>
+        /* Basic Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7f7f7;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            overflow: hidden;
+            padding: 0 20px;
+        }
+        header {
+            background: #333;
+            color: #fff;
+            padding: 20px 0;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+        }
+        .dashboard {
+            padding: 30px 0;
+        }
+        .filter-section {
+            margin-bottom: 20px;
+        }
+        .filter-section label,
+        .filter-section select {
+            display: block;
+            margin-bottom: 10px;
+        }
+        .filter-section select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background: #5cb85c;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .button:hover {
+            background: #4cae4c;
+        }
+        .data-section {
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .data-section table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .data-section th,
+        .data-section td {
+            text-align: left;
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        .data-section th {
+            background-color: #f4f4f4;
+        }
+        .data-section tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .checkbox-custom {
+            display: none;
+        }
+        .checkbox-custom + label {
+            position: relative;
+            padding-left: 25px;
+            cursor: pointer;
+        }
+        .checkbox-custom + label:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #ddd;
+            border-radius: 3px;
+            background-color: #fff;
+        }
+        .checkbox-custom:checked + label:before {
+            background-color: #5cb85c;
+        }
+        .checkbox-custom:checked + label:after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 9px;
+            width: 5px;
+            height: 10px;
+            border: solid #fff;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Traffic Dashboard</h1>
+        </header>
+        <div class="dashboard">
+            <div class="filter-section">
+                <label for="vehicleCount">Vehicle Count:</label>
+                <select id="vehicleCount">
+                    <option value="all">All</option>
+                    <option value="Eastbound">Eastbound</option>
+                    <option value="Westbound">Westbound</option>
+                    <option value="Northbound">Northbound</option>
+                    <option value="Southbound">Southbound</option>
+                </select>
+                <label for="roadId">Road ID:</label>
+                <select id="roadId">
+                    <option value="all">All</option>
+                    <option value="Road1">Road1</option>
+                    <option value="Road2">Road2</option>
+                    <option value="Road3">Road3</option>
+                    <option value="Road4">Road4</option>
+                </select>
+                <button class="button" onclick="applyFilter()">Apply Filter</button>
+            </div>
+            <div class="data-section">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Select</th>
+                            <th>Timestamp</th>
+                            <th>Intersection ID</th>
+                            <th>Road ID</th>
+                            <th>Vehicle Count</th>
+                            <th>Direction</th>
+                            <th>Red Duration</th>
+                            <th>Yellow Duration</th>
+                            <th>Green Duration</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataRows">
+                        <!-- Data rows will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+            <button class="button" id="controlButton">Control Signal</button>
+        </div>
+    </div>
+
+    <script>
+        const data = [
+            {"Timestamp":"2024-03-02T00:00:00.000Z","Intersection_ID":"JCT001","Road_ID":"Road2","Vehicle_Count":"Westbound","Direction":17,"Red_Duration":15,"Yellow_Duration":5,"Green_Duration":10},
+            {"Timestamp":"2024-03-01T20:00:00.000Z","Intersection_ID":"JCT001","Road_ID":"Road3","Vehicle_Count":"Northbound","Direction":46,"Red_Duration":35,"Yellow_Duration":5,"Green_Duration":30},
+            {"Timestamp":"2024-03-01T20:00:00.000Z","Intersection_ID":"JCT001","Road_ID":"Road4","Vehicle_Count":"Southbound","Direction":19,"Red_Duration":15,"Yellow_Duration":5,"Green_Duration":10},
+            {"Timestamp":"2024-03-01T20:00:00.000Z","Intersection_ID":"JCT001","Road_ID":"Road1","Vehicle_Count":"Eastbound","Direction":28,"Red_Duration":15,"Yellow_Duration":5,"Green_Duration":10},
+            {"Timestamp":"2024-03-01T20:00:00.000Z","Intersection_ID":"JCT001","Road_ID":"Road2","Vehicle_Count":"Westbound","Direction":23,"Red_Duration":15,"Yellow_Duration":5,"Green_Duration":10},
+            {"Timestamp":"2024-03-02T00:00:00.000Z","Intersection_ID":"JCT001","Road_ID":"Road1","Vehicle_Count":"Eastbound","Direction":39,"Red_Duration":30,"Yellow_Duration":5,"Green_Duration":25},
+            {"Timestamp":"2024-03-02T00:00:00.000Z","Intersection_ID":"JCT001","Road_ID":"Road3","Vehicle_Count":"Northbound","Direction":43,"Red_Duration":35,"Yellow_Duration":5,"Green_Duration":30},
+            {"Timestamp":"2024-03-02T00:00:00.000Z","Intersection_ID":"JCT001","Road_ID":"Road2","Vehicle_Count":"Westbound","Direction":24,"Red_Duration":15,"Yellow_Duration":5,"Green_Duration":10},
+            {"Timestamp":"2024-03-01T20:00:00.000Z","Intersection_ID":"JCT001","Road_ID":"Road1","Vehicle_Count":"Eastbound","Direction":20,"Red_Duration":15,"Yellow_Duration":5,"Green_Duration":10},
+            {"Timestamp":"2024-03-02T00:00:00.000Z","Intersection_ID":"JCT001","Road_ID":"Road1","Vehicle_Count":"Eastbound","Direction":47,"Red_Duration":35,"Yellow_Duration":5,"Green_Duration":30},
+            {"Timestamp":"2024-03-01T20:00:00.000Z","Intersection_ID":"JCT001","Road_ID":"Road3","Vehicle_Count":"Northbound","Direction":26,"Red_Duration":15,"Yellow_Duration":5,"Green_Duration":10},
+            {"Timestamp":"2024-03-01T16:00:00.000Z","Intersection_ID":"JCT001","Road_ID":"Road2","Vehicle_Count":"Westbound","Direction":42,"Red_Duration":35,"Yellow_Duration":5,"Green_Duration":30},
+            {"Timestamp":"2024-03-02T00:00:00.000Z","Intersection_ID":"JCT001","Road_ID":"Road2","Vehicle_Count":"Westbound","Direction":19,"Red_Duration":15,"Yellow_Duration":5,"Green_Duration":10},
+            {"Timestamp":"2024-03-02T00:00:00.000Z","Intersection_ID":"JCT001","Road_ID":"Road4","Vehicle_Count":"Southbound","Direction":30,"Red_Duration":15,"Yellow_Duration":5,"Green_Duration":10},
+            {"Timestamp":"2024-03-01T20:00:00.000Z","Intersection_ID":"JCT001","Road_ID":"Road3","Vehicle_Count":"Northbound","Direction":24,"Red_Duration":15,"Yellow_Duration":5,"Green_Duration":10},
+            {"Timestamp":"2024-03-01T16:00:00.000Z","Intersection_ID":"JCT001","Road_ID":"Road2","Vehicle_Count":"Westbound","Direction":12,"Red_Duration":15,"Yellow_Duration":5,"Green_Duration":10},
+            {"Timestamp":"2024-03-02T00:00:00.000Z","Intersection_ID":"JCT001","Road_ID":"Road1","Vehicle_Count":"Eastbound","Direction":39,"Red_Duration":30,"Yellow_Duration":5,"Green_Duration":25},
+            {"Timestamp":"2024-03-01T16:00:00.000Z","Intersection_ID":"JCT001","Road_ID":"Road3","Vehicle_Count":"Northbound","Direction":35,"Red_Duration":30,"Yellow_Duration":5,"Green_Duration":25},
+            {"Timestamp":"2024-03-01T16:00:00.000Z","Intersection_ID":"JCT001","Road_ID":"Road2","Vehicle_Count":"Westbound","Direction":38,"Red_Duration":30,"Yellow_Duration":5,"Green_Duration":25},
+            {"Timestamp":"2024-03-01T16:00:00.000Z","Intersection_ID":"JCT001","Road_ID":"Road1","Vehicle_Count":"Eastbound","Direction":47,"Red_Duration":35,"Yellow_Duration":5,"Green_Duration":30},
+            {"Timestamp":"2024-03-02T00:00:00.000Z","Intersection_ID":"JCT001","Road_ID":"Road2","Vehicle_Count":"Westbound","Direction":42,"Red_Duration":35,"Yellow_Duration":5,"Green_Duration":30}
+        ];
+
+        function renderData(data) {
+            const dataRows = document.getElementById('dataRows');
+            dataRows.innerHTML = '';
+
+            data.forEach(entry => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="checkbox" class="checkbox-custom" id="${entry.Road_ID}_${entry.Timestamp}" value='${JSON.stringify(entry)}'><label for="${entry.Road_ID}_${entry.Timestamp}"></label></td>
+                    <td>${entry.Timestamp}</td>
+                    <td>${entry.Intersection_ID}</td>
+                    <td>${entry.Road_ID}</td>
+                    <td>${entry.Vehicle_Count}</td>
+                    <td>${entry.Direction}</td>
+                    <td>${entry.Red_Duration}</td>
+                    <td>${entry.Yellow_Duration}</td>
+                    <td>${entry.Green_Duration}</td>
+                `;
+                dataRows.appendChild(row);
+            });
+        }
+
+        function applyFilter() {
+            const vehicleCountFilter = document.getElementById('vehicleCount').value;
+            const roadIdFilter = document.getElementById('roadId').value;
+
+            let filteredData = data;
+
+            if (vehicleCountFilter !== 'all') {
+                filteredData = filteredData.filter(entry => entry.Vehicle_Count === vehicleCountFilter);
+            }
+
+            if (roadIdFilter !== 'all') {
+                filteredData = filteredData.filter(entry => entry.Road_ID === roadIdFilter);
+            }
+
+            renderData(filteredData);
+        }
+
+        document.getElementById('controlButton').addEventListener('click', function() {
+        const selectedCheckboxes = document.querySelectorAll('.checkbox-custom:checked');
+        const selectedData = Array.from(selectedCheckboxes).map(checkbox => JSON.parse(checkbox.value));
+
+        // Send selectedData to Flask server for traffic light control
+        fetch('/control_signal', {
+            method: 'POST',
+            body: JSON.stringify(selectedData),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => {
+            if (response.ok) {
+                alert('Selected data sent to ESP8266 for traffic light control.');
+            } else {
+                alert('Failed to send selected data to ESP8266. Please try again.');
+            }
+        }).catch(error => {
+            console.error('Error sending data to Flask server:', error);
+            alert('Failed to send selected data to ESP8266. Please try again.');
+        });
+    });
+
+        // Initial rendering of data
+        renderData(data);
+    </script>
+</body>
+</html>
